@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search & Seizure Cases Quiz</title>
+<style>
+  :root { --bg:#faf9f6; --fg:#1f1e1b; --muted:#6b6a65; --card:#fff; --line:#e3e1db; --accent:#2f5d8a; --ok:#2e7d4f; --bad:#b3402f; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1c1b19; --fg:#ecebe6; --muted:#9a998f; --card:#262522; --line:#3a3935; --accent:#7fb0e0; --ok:#6cc08b; --bad:#e8806f; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
+  main { max-width:680px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 20px; font-size:.95rem; }
+  .tabs { display:flex; gap:8px; margin-bottom:16px; }
+  button { font:inherit; cursor:pointer; }
+  .tab { padding:8px 14px; border:1px solid var(--line); background:var(--card); color:var(--fg); border-radius:8px; }
+  .tab.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; }
+  .count { color:var(--muted); font-size:.85rem; margin-bottom:8px; }
+  .q { font-size:1.1rem; font-weight:600; margin:0 0 14px; }
+  .opt { display:block; width:100%; text-align:left; padding:10px 12px; margin:8px 0; border:1px solid var(--line); background:var(--bg); color:var(--fg); border-radius:8px; }
+  .opt:hover:not(:disabled) { border-color:var(--accent); }
+  .opt.ok { border-color:var(--ok); background:color-mix(in srgb, var(--ok) 15%, var(--bg)); }
+  .opt.bad { border-color:var(--bad); background:color-mix(in srgb, var(--bad) 15%, var(--bg)); }
+  .fb { margin-top:12px; padding:12px; border-radius:8px; background:var(--bg); border:1px solid var(--line); }
+  .fb b.ok { color:var(--ok); } .fb b.bad { color:var(--bad); }
+  .hint { color:var(--muted); font-size:.9rem; margin-top:10px; }
+  .row { display:flex; gap:8px; margin-top:16px; justify-content:space-between; align-items:center; }
+  .btn { padding:8px 14px; border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:8px; }
+  .btn.ghost { background:transparent; color:var(--accent); }
+  .btn:disabled { opacity:.4; cursor:default; }
+  .flash { min-height:200px; display:flex; align-items:center; justify-content:center; text-align:center; cursor:pointer; padding:24px; }
+  .flash .lbl { color:var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+  .score { font-size:1.6rem; font-weight:700; margin:8px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Search, Seizure & Privacy Cases</h1>
+  <p class="sub">Ramirez, Lacson, Villasana, Comamo, Stonehill, Al-Ghoul</p>
+  <div class="tabs">
+    <button class="tab on" id="tabQuiz">Quiz</button>
+    <button class="tab" id="tabFlash">Flashcards</button>
+  </div>
+  <div id="view"></div>
+</main>
+<script>
+const Q = [
+ {p:"Ramirez v. CA: Ramirez secretly taped her own confrontation with Garcia. Does she violate R.A. 4200?",
+  o:["No, because she was a party to the conversation","Yes, because the law penalizes \"any person\" who secretly records without all parties' consent","No, because the law covers only \"communication,\" not \"conversation\"","Yes, but only if she used the recording in a criminal case"],
+  c:1,e:"The law makes no distinction, so even a participant who secretly records is liable. A tape recorder is an expressly listed device, and \"communication\" is broad enough to include a conversation.",h:"Think about the word \"any\" in the statute."},
+ {p:"People v. Lacson & Agpalo: Police arrested and frisked men who looked suspicious and ran when approached. What was the ruling?",
+  o:["Valid, because flight is an overt act showing guilt","Valid, because the snatching report justified a stop-and-frisk","Invalid, because looking suspicious and running are not overt acts, so the seized items are inadmissible","Valid, because the accused waived any objection by not raising it before arraignment"],
+  c:2,e:"Suspicious appearance and flight do not justify a warrantless arrest, and the snatching report gave no suspect description, so the stop-and-frisk had no genuine reason. The accused were acquitted.",h:"What overt act did the men actually perform?"},
+ {p:"Lacson and Villasana both involved accused who did not object to their arrest before arraignment. What does that failure waive?",
+  o:["Only the objection to the arrest (jurisdiction over the person), not the inadmissibility of the seized evidence","Both the objection to the arrest and the inadmissibility of the evidence","Only the right to appeal","Nothing at all"],
+  c:0,e:"Failure to object before arraignment affects only jurisdiction over the person. The accused may still challenge the admissibility of the evidence seized.",h:"Arrest and evidence are two separate issues."},
+ {p:"Villasana v. People: Why was the arrest based on the informant's tip invalid?",
+  o:["The informant was not under oath","There was no overt act, and a tip cannot replace the officers' personal knowledge","The arrest happened at night","The sachet contained less than 1 gram"],
+  c:1,e:"Villasana was only holding a sachet and talking to a woman. The officer confirmed the contents only after grabbing his hand, so the tip could not substitute for personal observation of an overt act.",h:"What did the officers personally observe?"},
+ {p:"Villasana v. People: Which was NOT a chain-of-custody lapse in this case?",
+  o:["The sachet was not marked immediately after seizure","No media or DOJ representative signed the inventory","The markings differed between the request and the laboratory report","The inventory was made at the barangay hall"],
+  c:3,e:"The inventory location was not the problem. The lapses were no immediate marking, no media or DOJ representative, no photographs, and mismatched markings.",h:"Look for the item that is not a defect."},
+ {p:"Comamo v. People: What are the elements of the plain view doctrine?",
+  o:["Prior justification for the intrusion, inadvertent discovery, and incriminating nature immediately apparent","Valid warrant, two witnesses, and consent of the owner","Probable cause, overt act, and hot pursuit","Genuine reason, two suspicious circumstances, and a frisk"],
+  c:0,e:"These are the three elements. The Court clarified that inadvertence only requires that the discovery be unintentional, even if officers were searching for other evidence under a warrant.",h:"Why they were there, how they found it, how obvious it was."},
+ {p:"Comamo v. People: The warrant listed a 9mm pistol \"among other firearms.\" Police seized an unlisted .45 pistol. What was the result?",
+  o:["The whole warrant was void, so all items were inadmissible","The phrase \"among other firearms\" was void, but the .45 pistol was admissible under plain view","The .45 pistol was admissible because Comamo consented to the search","The .45 pistol was inadmissible because it was not listed"],
+  c:1,e:"The overbroad phrase was void but the warrant stayed valid for the 9mm pistol. The .45 was admissible under plain view. The Court rejected consent: signing the Certificate of Orderly Search is not a waiver.",h:"Consent was the CA's theory, and the Supreme Court rejected it."},
+ {p:"Stonehill v. Diokno: Why were the 42 search warrants void?",
+  o:["They were issued by municipal judges","They named no specific offense and ordered seizure of records of all business transactions, making them general warrants","They were served at night","They covered the wrong address"],
+  c:1,e:"The applications cited four entire bodies of law instead of one specific offense, so no probable cause could be found. The warrants authorized seizing all business records, which is the evil of a general warrant.",h:"Probable cause in connection with how many offenses?"},
+ {p:"Stonehill v. Diokno: Which doctrine was abandoned, and which was adopted?",
+  o:["Plain view abandoned; stop-and-frisk adopted","Moncado doctrine abandoned; exclusionary rule adopted","Exclusionary rule abandoned; Moncado doctrine adopted","Gaanan doctrine abandoned; Ramirez doctrine adopted"],
+  c:1,e:"Following Weeks v. United States and Mapp v. Ohio, the Court abandoned Moncado and held that illegally seized evidence is inadmissible. Petitioners could object only to items from their residences, not the corporate offices.",h:"Which rule makes illegally seized evidence inadmissible?"},
+ {p:"Al-Ghoul v. CA: The warrants named only Apartment No. 2, but police also searched Apartment No. 8. What was the ruling?",
+  o:["Both searches were valid","Both searches were invalid","No. 8 search was illegal and inadmissible; No. 2 search was valid and admissible","No. 2 search was illegal; No. 8 search was valid"],
+  c:2,e:"Police cannot change, enlarge or amplify the place named in the warrant (PICOP v. Asuncion). At Apartment No. 2 the occupants were present, so the two-witness rule did not apply, and the items were prohibited under P.D. 1866.",h:"The warrant names the place."}
+];
+const view = document.getElementById('view');
+const tabQuiz = document.getElementById('tabQuiz'), tabFlash = document.getElementById('tabFlash');
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let mode = 'quiz';
+
+tabQuiz.onclick = () => { mode='quiz'; tabQuiz.classList.add('on'); tabFlash.classList.remove('on'); startQuiz(); };
+tabFlash.onclick = () => { mode='flash'; tabFlash.classList.add('on'); tabQuiz.classList.remove('on'); startFlash(); };
+
+let qi = 0, score = 0, answered = false;
+function startQuiz() { qi = 0; score = 0; renderQuiz(); }
+function renderQuiz() {
+  if (qi >= Q.length) {
+    view.innerHTML = `<div class="card"><div class="count">Finished</div><div class="score">${score} / ${Q.length}</div><p>${score === Q.length ? 'Perfect score.' : 'Review the ones you missed with the flashcards.'}</p><div class="row"><button class="btn" id="again">Try again</button><button class="btn ghost" id="toFlash">Open flashcards</button></div></div>`;
+    document.getElementById('again').onclick = startQuiz;
+    document.getElementById('toFlash').onclick = () => tabFlash.click();
+    return;
+  }
+  answered = false;
+  const q = Q[qi];
+  view.innerHTML = `<div class="card"><div class="count">Question ${qi+1} of ${Q.length}</div>
+    <p class="q">${esc(q.p)}</p>
+    ${q.o.map((t,i)=>`<button class="opt" data-i="${i}">${esc(t)}</button>`).join('')}
+    <div class="hint">Hint: ${esc(q.h)}</div>
+    <div id="fb"></div>
+    <div class="row"><span></span><button class="btn" id="next" disabled>${qi===Q.length-1?'See score':'Next'}</button></div></div>`;
+  view.querySelectorAll('.opt').forEach(b => b.onclick = () => pick(+b.dataset.i));
+  document.getElementById('next').onclick = () => { qi++; renderQuiz(); };
+}
+function pick(i) {
+  if (answered) return; answered = true;
+  const q = Q[qi], good = i === q.c;
+  if (good) score++;
+  view.querySelectorAll('.opt').forEach((b,k) => { b.disabled = true; if (k===q.c) b.classList.add('ok'); else if (k===i) b.classList.add('bad'); });
+  document.getElementById('fb').innerHTML = `<div class="fb"><b class="${good?'ok':'bad'}">${good?'Correct.':'Not quite.'}</b> ${esc(q.e)}</div>`;
+  document.getElementById('next').disabled = false;
+}
+
+let fi = 0, flipped = false;
+function startFlash() { fi = 0; flipped = false; renderFlash(); }
+function renderFlash() {
+  const q = Q[fi];
+  view.innerHTML = `<div class="count">Card ${fi+1} of ${Q.length} · tap the card to flip</div>
+    <div class="card flash" id="fc"><div>${flipped
+      ? `<div class="lbl">Answer</div><p class="q">${esc(q.o[q.c])}</p><p>${esc(q.e)}</p>`
+      : `<div class="lbl">Question</div><p class="q">${esc(q.p)}</p>`}</div></div>
+    <div class="row"><button class="btn ghost" id="prev" ${fi===0?'disabled':''}>Previous</button><button class="btn" id="nx" ${fi===Q.length-1?'disabled':''}>Next</button></div>`;
+  document.getElementById('fc').onclick = () => { flipped = !flipped; renderFlash(); };
+  document.getElementById('prev').onclick = () => { fi--; flipped = false; renderFlash(); };
+  document.getElementById('nx').onclick = () => { fi++; flipped = false; renderFlash(); };
+}
+startQuiz();
+</script>
+</body>
+</html>
