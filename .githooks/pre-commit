@@ -1,0 +1,5 @@
+#!/bin/sh
+# Enable once per clone: git config core.hooksPath .githooks
+files=$(git diff --cached --name-only --diff-filter=ACM -- '*.html')
+[ -z "$files" ] && exit 0
+exec node scripts/check-html.mjs $files

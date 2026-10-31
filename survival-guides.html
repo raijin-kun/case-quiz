@@ -1,0 +1,558 @@
+<title>Field Survival Guides</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+  /* Layout: sticky top bar with guide tabs; below it a full-height 3D stage on the left and a scrolling field-manual panel on the right. Stacks on phones. */
+  :root {
+    --bg: #ecefea; --panel: #f7f9f5; --fg: #19211d; --muted: #5d6a63; --line: #cfd8d2;
+    --accent: #0e7c8c; --accent-ink: #ffffff; --warn: #a8441b; --warn-bg: #fbe9df; --bar-h: 56px;
+    --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  }
+  .app[data-guide="shelter"] { --accent: #3f7a3c; }
+  .app[data-guide="zombie"]  { --accent: #8a2f2f; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #10171a; --panel: #172025; --fg: #e3eae6; --muted: #94a39c; --line: #28363c;
+    --accent: #4fc1d1; --accent-ink: #06161a; --warn: #f0a07a; --warn-bg: #3a2218; color-scheme: dark;
+  }
+  :root:not([data-theme="light"]) .app[data-guide="shelter"] { --accent: #7fc47a; --accent-ink: #071407; }
+  :root:not([data-theme="light"]) .app[data-guide="zombie"]  { --accent: #e07a7a; --accent-ink: #1a0707; } }
+  :root[data-theme="dark"] {
+    --bg: #10171a; --panel: #172025; --fg: #e3eae6; --muted: #94a39c; --line: #28363c;
+    --accent: #4fc1d1; --accent-ink: #06161a; --warn: #f0a07a; --warn-bg: #3a2218; color-scheme: dark;
+  }
+  :root[data-theme="dark"] .app[data-guide="shelter"] { --accent: #7fc47a; --accent-ink: #071407; }
+  :root[data-theme="dark"] .app[data-guide="zombie"]  { --accent: #e07a7a; --accent-ink: #1a0707; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 var(--body); }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+  .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; height: var(--bar-h); display: flex; align-items: center; gap: 18px; background: var(--panel); border-bottom: 1px solid var(--line);
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .brand { font: 700 1.25rem/1 var(--display); letter-spacing: .02em; white-space: nowrap; }
+  .tabs { display: flex; gap: 4px; overflow-x: auto; min-width: 0; }
+  .tab { font: 600 .92rem var(--body); padding: 7px 12px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .tab.on { color: var(--accent); border-color: var(--accent); }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; }
+  .stage { position: sticky; top: calc(var(--bar-h) + env(safe-area-inset-top, 0px)); height: calc(100svh - var(--bar-h)); min-width: 0; }
+  .canvas-wrap, .canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .hud { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); right: 16px; bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .status { font-size: .88rem; padding: 6px 10px; border-radius: 6px; background: color-mix(in srgb, var(--panel) 85%, transparent); backdrop-filter: blur(6px); border: 1px solid var(--line); }
+  .hint { position: absolute; top: 12px; left: max(16px, env(safe-area-inset-left, 0px)); color: var(--muted); font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; pointer-events: none; }
+  .panel { background: var(--panel); border-left: 1px solid var(--line); padding-block: 28px 40px;
+    padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); min-width: 0; }
+  .panel > * + * { margin-top: 18px; }
+  h1 { font: 700 2.2rem/1 var(--display); margin: 0; text-wrap: balance; letter-spacing: .01em; }
+  .eyebrow { color: var(--accent); font: 600 .85rem/1 var(--display); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 6px; }
+  h2 { font: 600 1.6rem/1.1 var(--display); margin: 0 0 8px; text-wrap: balance; }
+  p { margin: 0 0 10px; max-width: 62ch; }
+  .steps { display: grid; gap: 4px; }
+  .steps button { height: 6px; border: 0; border-radius: 3px; background: var(--line); padding: 0; cursor: pointer; }
+  .steps button.done { background: var(--accent); opacity: .5; }
+  .steps button.on { background: var(--accent); opacity: 1; }
+  :is(button, input, a):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .nav { display: flex; gap: 8px; }
+  .btn { font: 600 .95rem var(--body); padding: 9px 14px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--accent); }
+  .btn.hud-btn { background: color-mix(in srgb, var(--panel) 85%, transparent); color: var(--fg); border-color: var(--line); backdrop-filter: blur(6px); }
+  .btn.hud-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .spec { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: .92rem; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+  .spec dt { color: var(--muted); } .spec dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 7px; font: 600 .85rem var(--body); padding: 6px 10px 6px 7px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+  .chip i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,.2); }
+  .chip.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .chip:disabled { opacity: .45; cursor: default; }
+  .card { border-left: 4px solid var(--accent); padding: 4px 0 4px 14px; }
+  .card h3 { font: 600 1.25rem/1.1 var(--display); margin: 0 0 4px; }
+  .card .sub { color: var(--muted); font-size: .88rem; margin-bottom: 8px; }
+  .card ul { margin: 0; padding-left: 18px; }
+  .slider { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: .92rem; }
+  .slider label { display: flex; justify-content: space-between; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .slider input { width: 100%; accent-color: var(--accent); }
+  .slider .verdict { color: var(--muted); }
+  .warn { background: var(--warn-bg); color: var(--fg); border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); border-radius: 8px; padding: 12px 14px; font-size: .92rem; }
+  .warn b { color: var(--warn); }
+  .legend { font-size: .82rem; color: var(--muted); }
+  @media (max-width: 880px) {
+    .grid { grid-template-columns: 1fr; }
+    .stage { height: 52svh; }
+    .panel { border-left: 0; border-top: 1px solid var(--line); }
+    .brand { display: none; }
+  }
+</style>
+
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+<script type="importmap">{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "htm":"https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.module.js"},
+ "integrity":{
+  "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js":"sha384-61S/Nu32S3E5+n+KpCOTb2eRYps6fVKm+9Gz1QBvSePFthb46f063Aa/qe/lykFZ",
+  "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js":"sha384-qlO/ZugKPxAQUAvTlQoo0QECzxJIJySZmCF/DHdb2Xn/hHndFwX/vfUAC9Hbk6LP",
+  "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/geometries/ParametricGeometry.js":"sha384-uqgEwYZPCWtQSYX143sZLrwig//MMARVS5AHgheFBcjZyO/i+NETVOMrb6RUT972",
+  "https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.module.js":"sha384-k7/PyxcXOQ/zfJq1v0TM/CcBLQ2m2NzGg2tfHehdgJGqcY7RBwIP4Ye+ssG+QK1I"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { ParametricGeometry } from 'three/addons/geometries/ParametricGeometry.js';
+import htm from 'htm';
+const { useState, useEffect, useRef } = React;
+const html = htm.bind(React.createElement);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ============ shared 3D helpers ============
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+function speckle(base, dots, n, r, rep = 3) {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = base; g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < n; i++) { g.fillStyle = dots[i % dots.length]; g.beginPath(); g.ellipse(Math.random()*256, Math.random()*256, r*(0.5+Math.random()), r*(0.3+Math.random()*0.5), Math.random()*3, 0, 7); g.fill(); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const mat = (tex, extra = {}) => new THREE.MeshStandardMaterial({ map:tex, roughness:0.95, emissive:0x000000, ...extra });
+const solid = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness:0.85, emissive:0x000000, ...extra });
+function stick(a, b, r, m) {
+  const d = new THREE.Vector3().subVectors(b, a), s = new THREE.Mesh(new THREE.CylinderGeometry(r, r*1.15, d.length(), 8), m);
+  s.position.copy(a).addScaledVector(d, 0.5); s.quaternion.setFromUnitVectors(V(0,1,0), d.clone().normalize()); return s;
+}
+const revealChildren = (r, obj) => obj.children.forEach((c, i) => c.visible = i < Math.ceil(r*obj.children.length));
+const revealScaleY = (r, obj) => obj.scale.y = Math.max(1e-3, r);
+
+// ============ GUIDE 1: bottle water filter ============
+const waterGuide = {
+  id:'water', title:'Gravity Water Pre-Filter', eyebrow:'Field build · 2-litre bottle', partsLabel:'Materials',
+  legend:'A layered sediment-and-charcoal filter built from a plastic bottle. Follow the seven steps; the model fills in as you go.',
+  hint:'Drag to rotate · scroll to zoom · click a layer', camera:{ pos:[5.5,2.5,6.5], target:[0,0.8,0], min:4 }, highlight:0x2a6a74,
+  toggles:[ { id:'pour', label:'Pour water', enabledWhen:s => s.step === 6 }, { id:'explode', label:'Exploded view' } ],
+  params:[],
+  parts:[
+    { id:'cloth',    name:'Cotton cloth plug',  color:'#efe9dc', size:'2–3 cm deep',  qty:'1 square of cotton cloth, 2 coffee filters, or a handful of cotton balls', geo:{ y0:-0.45, y1:0.0, r:0.5 },
+      role:'Holds every layer inside the neck and catches charcoal dust so it does not wash into your cup.',
+      tips:['Pack it firmly but not so tight that water cannot drip through.','A coffee filter folded twice works well and is cheap.','Replace it when it turns dark.'] },
+    { id:'charcoal', name:'Activated charcoal', color:'#2b2b2f', size:'3–4 cm deep',  qty:'About 1 cup, aquarium or water-filter grade', geo:{ y0:0.0, y1:0.8, r:0.93 },
+      role:'Adsorbs chlorine, bad taste, odour and many organic chemicals onto its huge internal surface area.',
+      tips:['Rinse in clean water until it stops running black.','Do not use barbecue briquettes; they contain binders and lighter fluid.','Crushed hardwood charcoal from a fire is a weaker substitute.'] },
+    { id:'fine',     name:'Fine sand',          color:'#e3c98f', size:'4–5 cm deep',  qty:'About 1½ cups, rinsed', geo:{ y0:0.8, y1:1.7, r:0.93 },
+      role:'Traps fine silt and clay. This is the layer that actually clears cloudy water, so it is the thickest.',
+      tips:['Play sand or river sand. Rinse until the rinse water is clear.','Beach sand must be rinsed to remove salt.','Flow slows down as this layer loads up; that is normal.'] },
+    { id:'coarse',   name:'Coarse sand',        color:'#c3a062', size:'3–4 cm deep',  qty:'About 1 cup, rinsed', geo:{ y0:1.7, y1:2.4, r:0.93 },
+      role:'Catches mid-size grit so the fine sand below does not clog in the first few litres.',
+      tips:['Builder\'s sharp sand or sieved river sand.','Keep it clearly coarser than the fine layer; grading is what makes the filter work.'] },
+    { id:'gravel',   name:'Pea gravel',         color:'#8c8578', size:'3–4 cm deep',  qty:'About 1 cup of 5–10 mm pebbles, rinsed', geo:{ y0:2.4, y1:3.2, r:0.93 },
+      role:'Stops leaves, insects and large debris, and spreads the poured water evenly so it does not dig channels through the sand.',
+      tips:['Aquarium gravel or washed pebbles from a stream.','Pour onto the gravel gently, never straight onto sand.'] },
+  ],
+  steps:[
+    { title:'Cut the bottle', body:'Take a clean 2-litre PET bottle, peel off the label and cut off the bottom about 5 cm up. Turn it upside down: the neck is now the outlet. Poke three small holes in the cap, or leave the cap off. Stand the bottle in a jar or cup that will catch the water.', spec:{ Bottle:'2 L PET, clean', Tools:'Knife or scissors, nail for cap holes', Catch:'Clean jar or cup' } },
+    { title:'Plug the neck', part:'cloth' },
+    { title:'Add activated charcoal', part:'charcoal' },
+    { title:'Add fine sand', part:'fine' },
+    { title:'Add coarse sand', part:'coarse' },
+    { title:'Top with gravel', part:'gravel' },
+    { title:'Pour and collect', body:'Pour dirty water slowly onto the gravel. It should drip, not stream; a slow drip means the sand is doing its job. Throw away the first two or three batches, which carry charcoal dust and loose sand. Then collect the clear water and boil or treat it before drinking.', spec:{ Removes:'Sediment, silt, colour, odour, chlorine', 'Does not remove':'Bacteria, viruses, dissolved salts, heavy metals', Flow:'About 1 cup every 5–10 min', Lifespan:'Rebuild when flow stops or output tastes off' } },
+  ],
+  warn:['Not drinking water yet.', ' This filter clears sediment, colour and odour. It does not remove bacteria, viruses or dissolved salts. Boil the output for 1 minute (3 minutes above 2000 m) or use purification tablets before drinking.'],
+  emptyCard:'Five cheap materials, graded coarse to fine from top to bottom. Each layer protects the one beneath it from clogging.',
+  scene({ scene, setStatus }) {
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 1.1));
+    const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(4, 8, 5); scene.add(key);
+    const TEX = {
+      cloth: speckle('#efe9dc', ['#e2dbcb','#f7f3ea'], 600, 1.2), charcoal: speckle('#2b2b2f', ['#3d3d44','#1a1a1d','#4a4a52'], 500, 3),
+      fine: speckle('#e3c98f', ['#d4b67a','#f0dba8'], 1500, 0.8), coarse: speckle('#c3a062', ['#a8843f','#d9b876','#8f6d35'], 700, 2.2),
+      gravel: speckle('#8c8578', ['#6e6860','#a9a295','#5a554d','#bdb6a8'], 160, 7),
+    };
+    Object.values(TEX).forEach(t => t.repeat.set(3, 1));
+    const glass = new THREE.MeshPhysicalMaterial({ color:0xdff4f7, transmission:0.9, roughness:0.08, thickness:0.2, transparent:true, opacity:0.45, side:THREE.DoubleSide, depthWrite:false });
+    scene.add(new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 4.2, 48, 1, true).translate(0, 2.1, 0), glass),
+              new THREE.Mesh(new THREE.CylinderGeometry(1, 0.3, 0.6, 48, 1, true).translate(0, -0.3, 0), glass),
+              new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.45, 32, 1, true).translate(0, -0.82, 0), glass),
+              new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.7, 1.5, 48, 1, true).translate(0, -2.0, 0), glass),
+              new THREE.Mesh(new THREE.CircleGeometry(0.7, 48).rotateX(-Math.PI/2).translate(0, -2.74, 0), glass));
+    const cupWater = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.7, 1, 48), new THREE.MeshPhysicalMaterial({ color:0x8fd3e0, transparent:true, opacity:0.6, roughness:0.1 }));
+    cupWater.visible = false; scene.add(cupWater);
+    const parts = {};
+    waterGuide.parts.forEach(L => {
+      const h = L.geo.y1 - L.geo.y0, m = new THREE.Mesh(new THREE.CylinderGeometry(L.geo.r, L.geo.r, h, 48), mat(TEX[L.id]));
+      m.position.y = L.geo.y0 + h/2; m.userData.reveal = revealScaleY; m.userData.geo = L.geo; parts[L.id] = m; scene.add(m);
+    });
+    // water particles
+    const N = 500, pos = new Float32Array(N*3), col = new Float32Array(N*3);
+    const P = Array.from({ length:N }, () => ({ y:-2.4 + Math.random()*6.6, a:Math.random()*6.283, f:Math.random() }));
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const points = new THREE.Points(pGeo, new THREE.PointsMaterial({ size:0.07, vertexColors:true, transparent:true, opacity:0.9, depthWrite:false }));
+    points.visible = false; scene.add(points);
+    const DIRTY = new THREE.Color(0x7a5a2a), CLEAN = new THREE.Color(0x9fdcea), topY = 3.2, botY = -0.45, tmp = new THREE.Color();
+    let cupLevel = 0;
+    return { parts, tick(dt, st) {
+      const exploded = st.toggles.explode, pouring = st.toggles.pour;
+      Object.values(parts).forEach((m, i) => {
+        const g = m.userData.geo, h = g.y1 - g.y0, target = g.y0 + h/2*m.scale.y + (exploded ? i*0.55 : 0);
+        m.position.y += (target - m.position.y) * (reduce ? 1 : Math.min(1, dt*8));
+      });
+      glass.opacity = exploded ? 0.15 : 0.45;
+      points.visible = pouring;
+      if (!pouring) { cupLevel = 0; cupWater.visible = false; setStatus(exploded ? 'Layers pulled apart. Coarse on top, fine at the bottom.' : ''); return; }
+      for (let i = 0; i < N; i++) {
+        const p = P[i]; p.y -= dt * (p.y < topY && p.y > botY ? 0.35 : 2.2);
+        if (p.y < -2.4) { p.y = 4.2; p.a = Math.random()*6.283; p.f = Math.random(); }
+        const r = p.y > 0 ? 0.85 : p.y > -0.6 ? 0.3 + 0.55*(p.y+0.6)/0.6 : p.y > -1.05 ? 0.22 : 0.62;
+        pos[i*3] = Math.cos(p.a)*r*p.f; pos[i*3+1] = p.y; pos[i*3+2] = Math.sin(p.a)*r*p.f;
+        tmp.copy(DIRTY).lerp(CLEAN, THREE.MathUtils.clamp((topY - p.y)/(topY - botY), 0, 1)); col[i*3] = tmp.r; col[i*3+1] = tmp.g; col[i*3+2] = tmp.b;
+      }
+      pGeo.attributes.position.needsUpdate = true; pGeo.attributes.color.needsUpdate = true;
+      cupLevel = Math.min(1.2, cupLevel + dt*0.05);
+      cupWater.visible = cupLevel > 0.02; cupWater.scale.y = cupLevel; cupWater.position.y = -2.74 + cupLevel/2;
+      setStatus(cupLevel < 0.3 ? 'Discard the first batches: charcoal dust.' : 'Clear water collecting. Boil it before drinking.');
+    } };
+  },
+};
+
+// ============ GUIDE 2: debris hut shelter ============
+const shelterGuide = {
+  id:'shelter', title:'Debris Hut Shelter', eyebrow:'Survival build · no tools', partsLabel:'Parts',
+  legend:'A one-person insulated shelter built with no tools from a pole, sticks and leaf litter. Seven steps; the model builds as you go.',
+  hint:'Drag to rotate · scroll to zoom · click a part', camera:{ pos:[4.6,2.4,4.8], target:[0,0.5,0], min:3, maxPolar:Math.PI/2 - 0.03 }, highlight:0x2c5a2a,
+  toggles:[ { id:'rain', label:'Rain test' }, { id:'cut', label:'Cutaway' } ],
+  params:[ { id:'thick', label:'Debris thickness', min:20, max:90, step:5, def:60, unit:'cm', showWhen:s => s.built('debris'),
+    verdict:cm => cm < 40 ? 'Too thin. You will feel every rib and lose heat all night.' : cm < 60 ? 'Minimum for a mild night. Add more if you can.' : 'Good: an arm\'s length. This is what keeps you warm without a fire.' } ],
+  parts:[
+    { id:'ridge',   name:'Ridgepole',  color:'#6b4a2e', size:'2.5–3 m long, wrist-thick', qty:'1 straight dead pole, strong enough to stand on',
+      role:'The spine of the shelter. One end rests on a stump, rock or forked branch at hip height; the other sits on the ground.',
+      tips:['Test it: stand on the middle. If it cracks, find another.','Hip height at the head end gives room to roll over but keeps the air volume small enough to warm.','Point the low end into the prevailing wind.'] },
+    { id:'ribs',    name:'Ribbing',    color:'#8a6a45', size:'Thumb-thick sticks, every 10–15 cm', qty:'40–60 sticks, 0.5–1.5 m long',
+      role:'Leaned against both sides of the ridgepole at about 45°. They carry the weight of the debris.',
+      tips:['Lie down inside first. Set the ribs a hand\'s width from your body; any wider and you will not warm the space.','Do not let ribs stick far above the pole, or rain runs down them into the hut.','Break sticks to length rather than leaving long ends.'] },
+    { id:'lattice', name:'Lattice',    color:'#a68a5b', size:'Finger-thick, flexible', qty:'Armfuls of brush, fern fronds, thin branches',
+      role:'Woven across the ribs so leaves and needles stay on the roof instead of falling through.',
+      tips:['Evergreen boughs work well and add insulation.','It does not need to be neat, only dense enough that debris cannot fall through.'] },
+    { id:'debris',  name:'Debris',     color:'#7c6a3c', size:'60–90 cm thick (an arm\'s length)', qty:'Far more than you think: a pile taller than you',
+      role:'The insulation. Dry leaves, pine needles, grass, ferns and moss trap still air; the thicker the layer, the warmer the night.',
+      tips:['Start at the ground and work upward so the layers shed water like shingles.','Push your arm in up to the shoulder. If you touch a rib, add more.','Finish with a few light branches laid over the top so wind does not strip it.'] },
+    { id:'bedding', name:'Bedding',    color:'#b59a5a', size:'30 cm+ compressed', qty:'Dry leaves or needles, three or four armfuls',
+      role:'Insulation from the ground, which pulls heat from you far faster than cold air does. This layer matters more than the walls.',
+      tips:['Stuff the interior full, crawl in, compress it, then add more.','Use the driest material you can find; damp bedding steals heat.','Avoid anything that bites: check for ants and spiders.'] },
+    { id:'door',    name:'Door plug',  color:'#6f5a2f', size:'Fills the entrance', qty:'A pile of debris, or your pack',
+      role:'Closes the only opening once you are inside. Without it, heat escapes and wind pours in.',
+      tips:['Pull the plug in behind you from inside; it does not need to be fancy.','A backpack stuffed with leaves is a ready-made plug.'] },
+  ],
+  steps:[
+    { title:'Choose the site', body:'Pick flat, dry ground slightly higher than its surroundings, so rain drains away rather than into your bed. Look up: nothing dead, cracked or hanging overhead. Stay out of gullies and valley bottoms, which collect cold air and water. Build close to your materials; you will carry a lot of leaves.', spec:{ Time:'2–3 hours for one person', Start:'At least 3 hours before dark', Tools:'None required', Ground:'Dry, drained, no anthills' } },
+    { title:'Set the ridgepole', part:'ridge' },
+    { title:'Lean the ribs', part:'ribs' },
+    { title:'Weave the lattice', part:'lattice' },
+    { title:'Pile on debris', part:'debris' },
+    { title:'Fill with bedding', part:'bedding' },
+    { title:'Plug the door and test', body:'Crawl in feet first and pull the door plug in behind you. Lie still for ten minutes and notice every draft; each one is a thin spot. Crawl out, add debris there, and repeat. Then try the rain test: a well-built roof sheds water, and a thin one lets it straight through.', spec:{ Walls:'60–90 cm of debris', Floor:'30 cm+ compressed bedding', Interior:'Snug, one person, no room to spare', Fire:'Not needed in mild cold' } },
+  ],
+  warn:['Shelter comes first.', ' In cold, wet or windy weather, exposure can kill in about three hours. Build before dark, never under dead standing trees or hanging branches, and stay visible to rescuers: a shelter that hides you is a liability.'],
+  emptyCard:'Everything is gathered dead from the ground. Nothing is cut, tied or carried in.',
+  scene({ scene, setStatus }) {
+    scene.add(new THREE.HemisphereLight(0xf2f6ff, 0x3b4a2a, 1.1));
+    const key = new THREE.DirectionalLight(0xfff4e0, 1.5); key.position.set(4, 7, 3); scene.add(key);
+    const M = {
+      ground: mat(speckle('#5e6b3f', ['#4b5a32','#7a7d45','#6b5a35','#3f4d2b'], 1200, 3, 6)),
+      ridge: mat(speckle('#6b4a2e', ['#553a22','#7f5b3a'], 500, 2, 1)), ribs: mat(speckle('#8a6a45', ['#6f5335','#a07d52'], 500, 2, 1)),
+      lattice: mat(speckle('#a68a5b', ['#8c7246','#bd9f6a'], 500, 2, 1)),
+      debris: mat(speckle('#7c6a3c', ['#5f4e2a','#9a8449','#6a6a3a','#8c6a3a','#4e5a2e'], 1600, 6, 4), { transparent:true, opacity:0, side:THREE.DoubleSide }),
+      bedding: mat(speckle('#b59a5a', ['#9c8148','#cdb272','#8a7442'], 1400, 5, 2)), door: mat(speckle('#6f5a2f', ['#55441f','#8a7442'], 800, 5, 2)),
+    };
+    scene.add(new THREE.Mesh(new THREE.CircleGeometry(4.5, 64).rotateX(-Math.PI/2), M.ground));
+    const X0 = -1.4, X1 = 1.6, Y0 = 0.95, Y1 = 0.05;
+    const px = u => X0 + (X1-X0)*u, py = u => Y0 + (Y1-Y0)*u, hw = u => 0.3 + 0.4*(1-u);
+    let thick = 0.6;
+    const shell = (u, t) => { const x = (X0-0.2) + (X1+0.25-(X0-0.2))*u, up = THREE.MathUtils.clamp((x-X0)/(X1-X0), 0, 1); return { x, h:py(up)+t, W:hw(up)+0.08+t }; };
+    const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.9, 16).translate(0, 0.45, 0), M.ridge.clone()); stump.position.x = X0 - 0.05; scene.add(stump);
+    const parts = {};
+    parts.ridge = new THREE.Group(); parts.ridge.add(stick(V(X0-0.25, Y0+0.03, 0), V(X1+0.15, Y1+0.03, 0), 0.05, M.ridge));
+    parts.ridge.userData.reveal = (r, o) => o.children[0].scale.y = Math.max(1e-3, r);
+    parts.ribs = new THREE.Group(); parts.ribs.userData.reveal = revealChildren;
+    for (let u = 0.06; u < 0.98; u += 0.06) for (const s of [-1, 1]) {
+      const top = V(px(u), py(u)+0.1, 0), base = V(px(u), 0, s*(hw(u)+0.08)), dir = top.clone().sub(base).normalize();
+      parts.ribs.add(stick(base, top.add(dir.multiplyScalar(0.12)), 0.022, M.ribs));
+    }
+    parts.lattice = new THREE.Group(); parts.lattice.userData.reveal = revealChildren;
+    for (const f of [0.22, 0.45, 0.68, 0.88]) for (const s of [-1, 1]) {
+      const pt = u => V(px(u), f*py(u)+0.06, s*(1-f)*(hw(u)+0.1));
+      parts.lattice.add(stick(pt(0.03), pt(0.99), 0.012, M.lattice));
+    }
+    const makeShell = t => new ParametricGeometry((u, v, out) => { const { x, h, W } = shell(u, t), th = v*Math.PI; out.set(x, h*Math.sin(th), W*Math.cos(th)); }, 40, 24);
+    parts.debris = new THREE.Mesh(makeShell(thick), M.debris); parts.debris.userData.reveal = r => M.debris.opacity = r;
+    parts.bedding = new THREE.Group();
+    parts.bedding.add(new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.26, 0.62).translate(0.05, 0.13, 0), M.bedding),
+                      new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 1.35, 6, 12).rotateZ(Math.PI/2).translate(0.05, 0.4, 0), solid(0x4a6a8a)));
+    parts.door = new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 14).scale(0.55, 1, 1).translate(X0-0.45, 0.45, 0), M.door);
+    Object.values(parts).forEach(o => scene.add(o));
+    const clipPlane = new THREE.Plane(V(0, 0, -1), 0), clippable = [M.ribs, M.lattice, M.debris];
+    const N = 700, pos = new Float32Array(N*3);
+    const R = Array.from({ length:N }, () => ({ x:(Math.random()-0.5)*5, y:Math.random()*3.5, z:(Math.random()-0.5)*4 }));
+    const rGeo = new THREE.BufferGeometry(); rGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const rain = new THREE.Points(rGeo, new THREE.PointsMaterial({ size:0.05, color:0x9fd3e6, transparent:true, opacity:0.85, depthWrite:false })); rain.visible = false; scene.add(rain);
+    let cut = false;
+    return { parts, tick(dt, st) {
+      if (st.params.thick/100 !== thick) { thick = st.params.thick/100; parts.debris.geometry.dispose(); parts.debris.geometry = makeShell(thick); }
+      if (cut !== !!st.toggles.cut) { cut = !!st.toggles.cut; clippable.forEach(m => m.clippingPlanes = cut ? [clipPlane] : []); }
+      rain.visible = !!st.toggles.rain;
+      if (!rain.visible) { setStatus(cut ? 'Cut open: ribs a hand\'s width from the body, bedding under it.' : ''); return; }
+      const roofOn = st.built('debris');
+      for (let i = 0; i < N; i++) {
+        const p = R[i]; p.y -= dt*3.2;
+        let reset = p.y < 0.01;
+        if (!reset && roofOn) { const u = (p.x-(X0-0.2))/((X1+0.25)-(X0-0.2)); if (u > 0 && u < 1) { const { h, W } = shell(u, thick); reset = (p.z/W)**2 + (p.y/h)**2 < 1; } }
+        if (reset) { p.x = (Math.random()-0.5)*5; p.z = (Math.random()-0.5)*4; p.y = 3.5; }
+        pos[i*3] = p.x; pos[i*3+1] = p.y; pos[i*3+2] = p.z;
+      }
+      rGeo.attributes.position.needsUpdate = true;
+      setStatus(roofOn ? (thick < 0.4 ? 'Roof sheds water, but thin debris soaks through by morning.' : 'Roof sheds water. Dry inside.') : 'Rain falls straight through the frame. Add debris.');
+    } };
+  },
+};
+
+// ============ GUIDE 3: zombie apocalypse safe room ============
+const zombieGuide = {
+  id:'zombie', title:'Zombie Safe Room', eyebrow:'Urban build · the dead are at the door', partsLabel:'Supplies',
+  legend:'Fortify one room of an ordinary house to hold out for two weeks. Eight steps; the model fills in as you go. Then test it against the horde.',
+  hint:'Drag to rotate · scroll to zoom · click an item', camera:{ pos:[4.8,3.4,5.2], target:[0,1,0], min:3.5, maxPolar:Math.PI/2 - 0.02 }, highlight:0x5a2a2a,
+  toggles:[ { id:'breach', label:'Breach test' }, { id:'night', label:'Lights out' } ],
+  params:[],
+  parts:[
+    { id:'brace',    name:'Door brace',     color:'#b08a5a', size:'2×4 timber, 1.8–2.4 m', qty:'2 lengths, 8 long screws or nails, a floor block',
+      role:'A diagonal from the floor to the door\'s midpoint turns a push on the door into a push on the floor. A latch fails in seconds; a brace holds.',
+      tips:['Only works on doors that open inward. For an outward door, lash the handle to something heavy.','Screw a block to the floor as a foot so the brace cannot skid.','A dresser alone slides. Brace first, then add furniture.'] },
+    { id:'boards',   name:'Window boards',  color:'#8d6b43', size:'Plywood 12 mm+ or interior doors', qty:'3 planks per window, 75 mm screws',
+      role:'Screwed into the frame studs, not the trim. Stops entry and hides movement inside.',
+      tips:['Leave a peephole gap at eye height.','Screws beat nails: they come out quietly when you need to leave.','Interior doors lifted off their hinges make good panels.'] },
+    { id:'blackout', name:'Blackout',       color:'#2a2a33', size:'Covers every window edge to edge', qty:'Dark blankets, bin bags, duct tape',
+      role:'Light at night is visible for hundreds of metres. Noise and light are what bring attention; blackout removes one of them.',
+      tips:['Check from outside before dark on the first night.','Tape the edges; light leaks at the sides.','Keep noise down after dark: no generators, no music.'] },
+    { id:'water',    name:'Water',          color:'#3f8fc0', size:'4 L per person per day', qty:'14 days minimum: 56 L per person',
+      role:'Fill the bathtub, sinks and every container the moment supply looks threatened. Taps stop before anything else does.',
+      tips:['A bathtub holds 150–200 L. Line it with a clean bin bag first.','The water heater tank holds about 150 L of clean water at its drain valve.','Anything from outside goes through the water filter guide, then gets boiled.'] },
+    { id:'food',     name:'Food',           color:'#c9a24a', size:'2000 kcal per person per day', qty:'14 days minimum, nothing that needs cooking',
+      role:'Canned, dried and sealed. Stock what you already eat; a crisis is not the time to learn to like something.',
+      tips:['Manual can opener. Two of them.','Calorie density: peanut butter, nuts, oats, canned fish, rice.','Keep it off the floor and away from the window.'] },
+    { id:'gobag',    name:'Go-bag',         color:'#4f5a3a', size:'72 hours, under 10 kg', qty:'One per person, packed and sitting by the exit',
+      role:'For the moment the room is no longer safe. Water, food, first aid, light, fire, knife, map, documents, cash, spare socks.',
+      tips:['Pack it before you need it; you will leave in a hurry.','Headlamp, not a torch: you need both hands.','A printed map and a meeting point your people already know.'] },
+    { id:'escape',   name:'Escape route',   color:'#d8c9a0', size:'Second exit, rigged and tested', qty:'Rope, knotted sheets or a rope ladder; something to break glass',
+      role:'Never fortify a room with one way out. Fire, smoke and flooding kill more people in sealed rooms than anything at the door.',
+      tips:['Tie the rope off before you need it and test it with your full weight.','Know where it lands and where you go from there.','Practise once in daylight.'] },
+  ],
+  steps:[
+    { title:'Choose the room', body:'Upstairs, with one door that opens inward and at least one window you can climb out of. Near a bathroom, because the tub is your reservoir. Not the basement: one exit, no light, and it floods. Walk the room and count the ways in; every one of them is work.', spec:{ Floor:'Upstairs, not the basement', Door:'One, opening inward', Exits:'Two or more', Near:'Bathroom with a tub' } },
+    { title:'Brace the door', part:'brace' },
+    { title:'Board the window', part:'boards' },
+    { title:'Black it out', part:'blackout' },
+    { title:'Store water', part:'water' },
+    { title:'Stock food', part:'food' },
+    { title:'Pack the go-bag', part:'gobag' },
+    { title:'Rig the escape and test', part:'escape', note:'Now run the tests. Lights out shows what the street sees after dark. Breach test puts a horde on the door; try it with and without the brace.' },
+  ],
+  warn:['Disaster prep in a costume.', ' The kit that gets you through a zombie film gets you through a hurricane, a blackout or a pandemic, which is why public health agencies have used the joke to teach it. The one real rule: never seal yourself in without a second way out.'],
+  emptyCard:'Seven jobs, in the order they keep you alive: stop the door, stop the light, then water, food, and a way out.',
+  scene({ scene, setStatus }) {
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x554433, 1.0); scene.add(hemi);
+    const key = new THREE.DirectionalLight(0xfff1dc, 1.4); key.position.set(3, 6, 4); scene.add(key);
+    const lamp = new THREE.PointLight(0xffc98a, 6, 6, 1.6); lamp.position.set(0.5, 2.2, 0.2); lamp.visible = false; scene.add(lamp);
+    const wall = solid(0xd9d2c3), floor = mat(speckle('#8a6b4a', ['#7a5c3e','#9a7b58'], 300, 2, 2)), wood = solid(0x8d6b43);
+    scene.add(new THREE.Mesh(new THREE.BoxGeometry(4, 0.1, 3).translate(0, -0.05, 0), floor),
+              new THREE.Mesh(new THREE.BoxGeometry(4, 2.6, 0.1).translate(0, 1.3, -1.55), wall),      // back wall
+              new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.6, 3).translate(-2.05, 1.3, 0), wall),       // left wall (door)
+              new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.6, 3).translate(2.05, 1.3, 0), wall));       // right wall (escape window)
+    // openings: back window, escape window, door frame
+    const glassMat = new THREE.MeshStandardMaterial({ color:0xbfe3f0, transparent:true, opacity:0.35, emissive:0x000000, emissiveIntensity:1.4 });
+    const win = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.0, 0.14).translate(0, 1.5, -1.55), glassMat); scene.add(win);
+    const esc = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.8, 0.8).translate(2.05, 1.5, -0.6), glassMat); scene.add(esc);
+    scene.add(new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.1, 1.0).translate(-2.05, 1.05, 0.55), solid(0x3a2a1a)));
+    const hinge = new THREE.Group(); hinge.position.set(-2.0, 0, 1.03); scene.add(hinge);
+    const door = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.05, 0.9).translate(0, 1.025, -0.46), solid(0x6b4a2e)); hinge.add(door);
+    // zombies outside the door
+    const horde = new THREE.Group(); horde.visible = false; scene.add(horde);
+    for (let i = 0; i < 4; i++) { const z = new THREE.Mesh(new THREE.CapsuleGeometry(0.18, 1.2, 4, 8).translate(0, 0.9, 0), solid(0x3b4a3a)); z.position.set(-2.6 - Math.random()*0.5, 0, 0.2 + Math.random()*0.7); z.userData.ph = Math.random()*6; z.userData.z0 = z.position.z; z.userData.adv = 0; horde.add(z); }
+    const parts = {};
+    parts.brace = new THREE.Group();
+    parts.brace.add(stick(V(-1.1, 0.08, 0.55), V(-1.97, 1.05, 0.55), 0.045, solid(0xb08a5a)),
+                    new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.12, 0.25).translate(-1.05, 0.06, 0.55), solid(0xb08a5a)),
+                    new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 1.1).translate(-1.95, 1.05, 0.55), solid(0xb08a5a)));
+    parts.boards = new THREE.Group(); parts.boards.userData.reveal = revealChildren;
+    [1.15, 1.5, 1.85].forEach((y, i) => { const b = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 0.04), wood); b.position.set(0, y, -1.44); b.rotation.z = (i-1)*0.04; parts.boards.add(b); });
+    parts.blackout = new THREE.Group();
+    parts.blackout.add(new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.2, 0.02).translate(0, 1.5, -1.4), solid(0x2a2a33)),
+                       new THREE.Mesh(new THREE.BoxGeometry(0.02, 1.0, 1.0).translate(1.95, 1.5, -0.6), solid(0x2a2a33)));
+    parts.water = new THREE.Group();
+    [[1.2,-1.1],[1.55,-1.15],[1.4,-0.75]].forEach(([x, z]) => parts.water.add(new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.45, 12).translate(x, 0.225, z), solid(0x3f8fc0, { transparent:true, opacity:0.85 }))));
+    parts.water.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.35).translate(0.75, 0.175, -1.2), solid(0x3f8fc0, { transparent:true, opacity:0.85 })));
+    parts.food = new THREE.Group();
+    parts.food.add(new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.04, 0.35).translate(-1.3, 0.9, -1.3), wood), new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.04, 0.35).translate(-1.3, 1.4, -1.3), wood));
+    for (let i = 0; i < 10; i++) parts.food.add(new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.12, 10).translate(-1.72 + (i%5)*0.21, (i < 5 ? 0.98 : 1.48), -1.3), solid(i%2 ? 0xc9a24a : 0xb44b3a)));
+    parts.food.add(new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.3).translate(-1.3, 0.15, -1.25), solid(0xb08a5a)));
+    parts.gobag = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.55, 0.28).translate(1.65, 0.275, -0.1), solid(0x4f5a3a));
+    parts.escape = new THREE.Group(); parts.escape.userData.reveal = revealChildren;
+    parts.escape.add(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.9).translate(1.9, 1.15, -0.6), wood));
+    for (let i = 0; i < 7; i++) {
+      const y = 1.1 - i*0.32;
+      parts.escape.add(stick(V(2.15, y, -0.85), V(2.15, y, -0.35), 0.02, wood));
+      if (i < 6) { parts.escape.add(stick(V(2.15, y, -0.85), V(2.15, y-0.32, -0.85), 0.012, solid(0xd8c9a0)), stick(V(2.15, y, -0.35), V(2.15, y-0.32, -0.35), 0.012, solid(0xd8c9a0))); }
+    }
+    Object.values(parts).forEach(o => scene.add(o));
+    let bt = 0, open = 0, nightT = 0;
+    return { parts, tick(dt, st) {
+      const night = !!st.toggles.night;
+      nightT += ((night ? 1 : 0) - nightT) * Math.min(1, dt*4);
+      hemi.intensity = 1.0 - 0.92*nightT; key.intensity = 1.4 - 1.35*nightT; lamp.visible = nightT > 0.05; lamp.intensity = 6*nightT;
+      scene.background = nightT > 0.5 ? new THREE.Color().setScalar(0.03) : null;
+      const leak = night && !st.built('blackout');
+      glassMat.emissive.set(leak ? 0xffb860 : 0x000000);
+      if (st.toggles.breach) {
+        bt += dt; horde.visible = true;
+        const braced = st.built('brace'), push = Math.max(0, Math.sin(bt*8)), breached = !braced && bt > 2.5;
+        if (breached) open = Math.min(1.5, open + dt*2.5);
+        hinge.rotation.y = -(breached ? open : push*0.06);
+        let inside = 0;
+        horde.children.forEach((z, i) => {
+          if (breached && open > 0.9) z.userData.adv = Math.min(1, z.userData.adv + dt*(0.35 + 0.1*i));
+          const a = z.userData.adv; if (a > 0.3) inside++;
+          z.position.x = -2.35 - 0.15*Math.abs(Math.sin(bt*4 + z.userData.ph)) + a*(2.0 + 0.6*i);
+          z.position.z = z.userData.z0 + a*(-0.5 - 0.3*i);
+          z.rotation.y = a > 0 ? -0.4 - 0.2*i : 0; z.rotation.z = 0.08*Math.sin(bt*3 + z.userData.ph);
+        });
+        setStatus(braced ? 'Door held. The brace sends the load into the floor.' : inside ? 'They are inside. This is why the escape route is rigged first.' : breached ? 'Breached. A latch alone fails in seconds.' : 'Something is pushing on the door…');
+      } else {
+        bt = 0; open = 0; horde.visible = false; horde.children.forEach(z => z.userData.adv = 0); hinge.rotation.y += (0 - hinge.rotation.y) * Math.min(1, dt*6);
+        setStatus(night ? (leak ? 'Light leaks from the windows. Visible for hundreds of metres.' : 'Blackout up. Nothing shows from the street.') : '');
+      }
+    } };
+  },
+};
+
+const GUIDES = [waterGuide, shelterGuide, zombieGuide];
+
+// ============ 3D host shared by all guides ============
+function createHost(el, guide, getState, setStatus, onPick) {
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.localClippingEnabled = true; el.appendChild(renderer.domElement);
+  const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  camera.position.set(...guide.camera.pos);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(...guide.camera.target); controls.enableDamping = true; controls.minDistance = guide.camera.min ?? 3; controls.maxDistance = 14;
+  if (guide.camera.maxPolar) controls.maxPolarAngle = guide.camera.maxPolar;
+  const g = guide.scene({ scene, camera, renderer, setStatus });
+  const reveal = Object.fromEntries(Object.keys(g.parts).map(k => [k, 0]));
+  Object.values(g.parts).forEach(o => o.visible = false);
+  let lastSel;
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); let downAt = null;
+  const onDown = e => downAt = [e.clientX, e.clientY];
+  const onUp = e => {
+    if (!downAt || Math.hypot(e.clientX-downAt[0], e.clientY-downAt[1]) > 6) return;
+    const r = renderer.domElement.getBoundingClientRect();
+    ndc.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(Object.values(g.parts).filter(o => o.visible), true)[0];
+    if (!hit) return;
+    const id = Object.keys(g.parts).find(k => g.parts[k] === hit.object || g.parts[k].getObjectById(hit.object.id));
+    if (id) onPick(id);
+  };
+  renderer.domElement.addEventListener('pointerdown', onDown); renderer.domElement.addEventListener('pointerup', onUp);
+  const resize = () => { const w = el.clientWidth, h = el.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix(); };
+  const ro = new ResizeObserver(resize); ro.observe(el); resize();
+  const clock = new THREE.Clock();
+  renderer.setAnimationLoop(() => {
+    const dt = Math.min(clock.getDelta(), 0.05), st = getState();
+    for (const [id, obj] of Object.entries(g.parts)) {
+      const target = st.built(id) ? 1 : 0;
+      reveal[id] = reduce ? target : target > reveal[id] ? Math.min(1, reveal[id] + dt*0.9) : target;
+      obj.visible = reveal[id] > 0;
+      (obj.userData.reveal || revealScaleY)(reveal[id], obj);
+    }
+    if (st.selected !== lastSel) {
+      lastSel = st.selected;
+      for (const [id, obj] of Object.entries(g.parts)) obj.traverse(o => o.material?.emissive?.set(id === lastSel ? guide.highlight : 0x000000));
+    }
+    g.tick(dt, st); controls.update(); renderer.render(scene, camera);
+  });
+  return () => { renderer.setAnimationLoop(null); ro.disconnect(); controls.dispose(); renderer.dispose(); renderer.domElement.remove(); };
+}
+
+// ============ React UI ============
+function Guide({ guide }) {
+  const n = guide.steps.length, partStep = id => guide.steps.findIndex(s => s.part === id);
+  const [s, setS] = useState({ step:0, selected:null, toggles:{}, params:Object.fromEntries(guide.params.map(p => [p.id, p.def])) });
+  const [status, setStatus] = useState('');
+  const view = { ...s, built: id => s.step >= partStep(id) };
+  view.toggles = Object.fromEntries(guide.toggles.filter(t => s.toggles[t.id] && (!t.enabledWhen || t.enabledWhen(view))).map(t => [t.id, true]));
+  const ref = useRef(), stateRef = useRef(view); stateRef.current = view;
+  useEffect(() => createHost(ref.current, guide, () => stateRef.current, setStatus, id => setS(x => ({ ...x, selected:id }))), [guide]);
+  const setStep = i => setS(x => { const step = (i + n) % n; return { ...x, step, selected: guide.steps[step].part ?? x.selected }; });
+  const step = guide.steps[s.step], P = guide.parts.find(p => p.id === step.part), C = guide.parts.find(p => p.id === s.selected);
+  return html`
+    <div class="grid">
+      <div class="stage">
+        <div class="canvas-wrap" ref=${ref}></div>
+        <div class="hint">${guide.hint}</div>
+        <div class="hud">
+          ${guide.toggles.map(t => html`<button key=${t.id} class="btn hud-btn" aria-pressed=${String(!!view.toggles[t.id])} disabled=${t.enabledWhen ? !t.enabledWhen(view) : false}
+            onClick=${() => setS(x => ({ ...x, toggles:{ ...x.toggles, [t.id]:!x.toggles[t.id] } }))}>${t.label}</button>`)}
+          ${status && html`<span class="status">${status}</span>`}
+        </div>
+      </div>
+      <aside class="panel">
+        <div>
+          <div class="eyebrow">${guide.eyebrow}</div>
+          <h1>${guide.title}</h1>
+          <p class="legend">${guide.legend}</p>
+        </div>
+        <div class="steps" role="tablist" aria-label="Build steps" style=${{ gridTemplateColumns:`repeat(${n}, 1fr)` }}>
+          ${guide.steps.map((st, i) => html`<button key=${i} role="tab" aria-selected=${String(i === s.step)} aria-label=${`Step ${i+1}: ${st.title}`} class=${(i < s.step ? 'done' : '') + (i === s.step ? ' on' : '')} onClick=${() => setStep(i)}></button>`)}
+        </div>
+        <div>
+          <div class="eyebrow">Step ${s.step+1} of ${n}</div>
+          <h2>${step.title}</h2>
+          ${P ? html`<p>${P.role}</p><p><b>${P.size}.</b> ${P.qty}.</p>` : html`<p>${step.body}</p>`}
+          ${step.note && html`<p>${step.note}</p>`}
+          ${step.spec && html`<dl class="spec">${Object.entries(step.spec).map(([k, v]) => html`<dt key=${k}>${k}</dt><dd key=${k+'v'}>${v}</dd>`)}</dl>`}
+        </div>
+        <div class="nav">
+          <button class="btn ghost" disabled=${s.step === 0} onClick=${() => setStep(s.step - 1)}>Back</button>
+          <button class="btn" onClick=${() => setStep(s.step + 1)}>${s.step === n-1 ? 'Start over' : 'Next step'}</button>
+        </div>
+        <div>
+          <div class="eyebrow">${guide.partsLabel}</div>
+          <div class="chips">
+            ${guide.parts.map(p => html`<button key=${p.id} class=${'chip' + (s.selected === p.id ? ' on' : '')} disabled=${!view.built(p.id)} title=${view.built(p.id) ? '' : 'Added in step ' + (partStep(p.id)+1)}
+              onClick=${() => setS(x => ({ ...x, selected:p.id }))}><i style=${{ background:p.color }}></i>${p.name}</button>`)}
+          </div>
+        </div>
+        <div class="card">
+          ${C ? html`<h3>${C.name}</h3><div class="sub">${C.size} · ${C.qty}</div><p>${C.role}</p><ul>${C.tips.map((t, i) => html`<li key=${i}>${t}</li>`)}</ul>`
+              : html`<h3>${guide.partsLabel}</h3><div class="sub">Click a part in the model or a chip above</div><p>${guide.emptyCard}</p>`}
+        </div>
+        ${guide.params.filter(p => p.showWhen(view)).map(p => html`
+          <div key=${p.id} class="slider">
+            <label for=${guide.id + '-' + p.id}><span>${p.label}</span><span>${s.params[p.id]} ${p.unit}</span></label>
+            <input type="range" id=${guide.id + '-' + p.id} min=${p.min} max=${p.max} step=${p.step} value=${s.params[p.id]} onInput=${e => { const v = +e.target.value; setS(x => ({ ...x, params:{ ...x.params, [p.id]:v } })); }}/>
+            <div class="verdict">${p.verdict(s.params[p.id])}</div>
+          </div>`)}
+        <div class="warn"><b>${guide.warn[0]}</b>${guide.warn[1]}</div>
+      </aside>
+    </div>`;
+}
+
+const fromHash = () => GUIDES.find(g => g.id === location.hash.slice(1)) || GUIDES[0];
+function App() {
+  const [guide, setGuide] = useState(fromHash);
+  useEffect(() => { const h = () => setGuide(fromHash()); addEventListener('hashchange', h); return () => removeEventListener('hashchange', h); }, []);
+  return html`
+    <div class="app" data-guide=${guide.id}>
+      <header class="bar">
+        <div class="brand">Field Survival Guides</div>
+        <nav class="tabs">${GUIDES.map(g => html`<a key=${g.id} class=${'tab' + (g === guide ? ' on' : '')} href=${'#' + g.id} aria-current=${g === guide ? 'page' : undefined}>${g.title}</a>`)}</nav>
+      </header>
+      <${Guide} key=${guide.id} guide=${guide} />
+    </div>`;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(html`<${App} />`);
+</script>

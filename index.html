@@ -92,14 +92,14 @@ let qi = 0, score = 0, answered = false;
 function startQuiz() { qi = 0; score = 0; renderQuiz(); }
 function renderQuiz() {
   if (qi >= Q.length) {
-    view.innerHTML = `<div class="card"><div class="count">Finished</div><div class="score">${score} / ${Q.length}</div><p>${score === Q.length ? 'Perfect score.' : 'Review the ones you missed with the flashcards.'}</p><div class="row"><button class="btn" id="again">Try again</button><button class="btn ghost" id="toFlash">Open flashcards</button></div></div>`;
+    view.innerHTML = /* static */ `<div class="card"><div class="count">Finished</div><div class="score">${score} / ${Q.length}</div><p>${score === Q.length ? 'Perfect score.' : 'Review the ones you missed with the flashcards.'}</p><div class="row"><button class="btn" id="again">Try again</button><button class="btn ghost" id="toFlash">Open flashcards</button></div></div>`;
     document.getElementById('again').onclick = startQuiz;
     document.getElementById('toFlash').onclick = () => tabFlash.click();
     return;
   }
   answered = false;
   const q = Q[qi];
-  view.innerHTML = `<div class="card"><div class="count">Question ${qi+1} of ${Q.length}</div>
+  view.innerHTML = /* static */ `<div class="card"><div class="count">Question ${qi+1} of ${Q.length}</div>
     <p class="q">${esc(q.p)}</p>
     ${q.o.map((t,i)=>`<button class="opt" data-i="${i}">${esc(t)}</button>`).join('')}
     <div class="hint">Hint: ${esc(q.h)}</div>
@@ -113,7 +113,7 @@ function pick(i) {
   const q = Q[qi], good = i === q.c;
   if (good) score++;
   view.querySelectorAll('.opt').forEach((b,k) => { b.disabled = true; if (k===q.c) b.classList.add('ok'); else if (k===i) b.classList.add('bad'); });
-  document.getElementById('fb').innerHTML = `<div class="fb"><b class="${good?'ok':'bad'}">${good?'Correct.':'Not quite.'}</b> ${esc(q.e)}</div>`;
+  document.getElementById('fb').innerHTML = /* static */ `<div class="fb"><b class="${good?'ok':'bad'}">${good?'Correct.':'Not quite.'}</b> ${esc(q.e)}</div>`;
   document.getElementById('next').disabled = false;
 }
 
@@ -121,7 +121,7 @@ let fi = 0, flipped = false;
 function startFlash() { fi = 0; flipped = false; renderFlash(); }
 function renderFlash() {
   const q = Q[fi];
-  view.innerHTML = `<div class="count">Card ${fi+1} of ${Q.length} · tap the card to flip</div>
+  view.innerHTML = /* static */ `<div class="count">Card ${fi+1} of ${Q.length} · tap the card to flip</div>
     <div class="card flash" id="fc"><div>${flipped
       ? `<div class="lbl">Answer</div><p class="q">${esc(q.o[q.c])}</p><p>${esc(q.e)}</p>`
       : `<div class="lbl">Question</div><p class="q">${esc(q.p)}</p>`}</div></div>
